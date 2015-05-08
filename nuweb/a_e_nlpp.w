@@ -526,7 +526,7 @@ YAMCHA=./tools
 @% FILEOUT=/tmp/$RANDOM-TimeProOUT.txp
 @% TIMEPRONORMIN=/tmp/$RANDOM-TimeProNormIN.txp
 
-cat $1 > $CHUNKIN
+cat > $CHUNKIN
 cat $CHUNKIN | java -cp "lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity timex
 
 #echo "Saving... $FILETXP"
@@ -548,6 +548,62 @@ java -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib
 rm -rf $timdir
 
 @| @}
+
+\subsection{Causalrel}
+\label{sec:causalrel}
+
+The script \verb|causalrel-pipeline-per-file.sh| contains pathnames
+beginning with \verb|/tmp|. However, in some cases \verb|/tmp| is not
+the best place for tempfiles, so we include the content of this script
+in the main script that runs the module.
+
+
+
+
+@o m4_bindir/causalrel @{@%
+#!/bin/bash
+@< load progenvironment @>
+rootDir=m4_amoddir/m4_causalrelmodule
+cd $rootDir
+BEGINTIME=`date '+%Y-%m-%dT%H:%M:%S%z'`
+timdir=`mktemp -d -t timerel.XXXXXX`
+FILETXP=$timdir/Causalrel
+@% FILETXPcsignalcol=$timdir/Causalrel.csignal.col
+@% FILETXPcsignals=$timdir/Causalrel.csignals
+NAF=$timdir/Causalrel.naf
+
+cat > $NAF
+
+cat $NAF | java -cp "lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar:lib/jdom-2.0.5.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity+event+timex+connectives+srl+dep+morpho+dct+main_verb+tlink train
+
+@% sh causalrel-pipeline-per-file.sh $FILETXP ./tools/
+@< include causalrel-pipeline-per-file @>
+
+#java -jar TXPtoNAF.jar $NAF $FILETXP.clinks $BEGINTIME CLINK
+java -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $NAF $FILETXP.clinks "$BEGINTIME" CLINK
+
+
+@% rm $FILETXP
+@% rm $FILETXP.clinks
+@% rm $NAF
+rm -rf $timdir
+
+
+@| @}
+
+
+@d include causalrel-pipeline-per-file @{@%
+python buildCSignalColumnFeatures.py $FILETXP > $FILETXP.csignal.col
+./tools/yamcha-0.33/usr/local/bin/yamcha -m models/csignal.model < $FILETXP.csignal.col | cut -f1,12 > $FILETXP.csignals
+
+python buildCRelPairFeatures.py $FILETXP $FILETXP.csignals > $FILETXP.clink.col
+
+./tools/yamcha-0.33/usr/local/bin/yamcha -m models/clink.model < $FILETXP.clink.col | cut -f1,2,24,30 | awk -F"\t" '$4=="CLINK" || $4=="CLINK-R" { print ; }' > $FILETXP.clinks
+
+rm $FILETXP.csignals $FILETXP.csignal.col $FILETXP.clink.col
+
+@| @}
+
 
 
 
@@ -603,7 +659,8 @@ cd $TESTDIR
 @% cat $TESTDIR/test.ned.naf | $BIND/srl  > $TESTDIR/test.srl.naf
 @% cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
 @% cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
-cat $TESTDIR/test.ecrf.naf | $BIND/timerel  > $TESTDIR/test.trel.naf
+@% cat $TESTDIR/test.ecrf.naf | $BIND/timerel  > $TESTDIR/test.trel.naf
+cat $TESTDIR/test.trel.naf | $BIND/causalrel  > $TESTDIR/test.crel.naf
 @% cat $TESTDIR/test.onto.naf | $BIND/heideltime > $TESTDIR/test.times.naf
 @% cat $TESTDIR/test.ecrf.naf | $BIND/framesrl  > $TESTDIR/test.fsrl.naf
 
@@ -636,6 +693,7 @@ sources :
 	chmod 775 bin/time
 	chmod 775 bin/evcoref
 	chmod 775 bin/timerel
+	chmod 775 bin/causalrel
 	chmod 775 bin/configure_modules
 	bin/configure_modules
 
