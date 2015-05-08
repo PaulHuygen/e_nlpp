@@ -94,6 +94,10 @@ comproot = "m4_amoddir"
 @| @}
 
 
+@o m4_bindir/installmisc @{@%
+#!/bin/bash
+@| @}
+
 
 
 \section{Computer environment}
@@ -605,6 +609,67 @@ rm $FILETXP.csignals $FILETXP.csignal.col $FILETXP.clink.col
 @| @}
 
 
+\subsection{Factuality}
+\label{sec:factuality}
+
+
+To use the factuality module we have to use perl.
+
+\url{http://search.cpan.org/CPAN/authors/id/R/RK/RKRIMEN/Scalar-MoreUtils-0.02.tar.gz}
+
+@o m4_bindir/installmisc @{@%
+instdir=`mktemp -d -t inst.XXXXXX`
+cd $instdir
+export PERL5LIB=m4_perllib:$PERL5LIB
+mkdir -p m4_perllib
+wget m4_moreutils_url
+tar -xzf m4_moreutils_pack.tar.gz
+cd m4_moreutils_pack
+perl Makefile.PL INSTALL_BASE=m4_perlbase
+make
+make test
+make install
+cd ..
+@% rm $instdir
+@| @}
+
+
+
+
+@o m4_bindir/factuality @{@%
+#!/bin/bash
+@< load progenvironment @>
+rootDir=m4_amoddir/m4_factualmodule
+# use non standard location for perl libraries
+export PERL5LIB=m4_perllib:$PERL5LIB
+
+cd ${rootDir}
+
+#RANDOM=`bash -c 'echo $RANDOM'`
+TMPDIR=`mktemp -d -t  factu.XXXXXX`
+
+# Create a begin timestamp so we can log how long it takes to process a file
+# [1] creates "begintimestamp.txt"
+perl beginTimestamp.pl > ${TMPDIR}/begintimestap.txt
+
+# Convert NAF file to Mallet input file 
+perl NAFToMalletInputFactuality.pl ${TMPDIR}/temp.naf > ${TMPDIR}/malletinput.tab
+
+# Run the mallet classifier 
+mallet-2.0.7/bin/csv2classify --input ${TMPDIR}/malletinput.tab --output ${TMPDIR}/malletoutput.txt --classifier MyMaxEntFactuality.classifier
+
+# Sort the output in order to be able to select the best prediction and its confidence
+perl sortMalletOutput.pl ${TMPDIR}/malletoutput.txt > ${TMPDIR}/malletoutput.sorted
+
+# Write back to NAF 
+# [1] uses  "begintimestamp.txt"
+perl convertMalletToNAF.pl ${TMPDIR}/temp.naf ${TMPDIR}/malletoutput.sorted ${TMPDIR}/begintimestap.txt 
+
+# Clean up
+#rm temp.naf malletinput.tab malletoutput.txt malletoutput.sorted begintimestamp.txt
+
+rm -fr ${TMPDIR} >& /dev/null
+@| @}
 
 
 \section{Miscellaneous}
@@ -660,9 +725,8 @@ cd $TESTDIR
 @% cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
 @% cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
 @% cat $TESTDIR/test.ecrf.naf | $BIND/timerel  > $TESTDIR/test.trel.naf
-cat $TESTDIR/test.trel.naf | $BIND/causalrel  > $TESTDIR/test.crel.naf
-@% cat $TESTDIR/test.onto.naf | $BIND/heideltime > $TESTDIR/test.times.naf
-@% cat $TESTDIR/test.ecrf.naf | $BIND/framesrl  > $TESTDIR/test.fsrl.naf
+@% cat $TESTDIR/test.trel.naf | $BIND/causalrel  > $TESTDIR/test.crel.naf
+cat $TESTDIR/test.crel.naf | $BIND/factuality  > $TESTDIR/test.out.naf
 
 
 @| @}
@@ -694,6 +758,9 @@ sources :
 	chmod 775 bin/evcoref
 	chmod 775 bin/timerel
 	chmod 775 bin/causalrel
+	chmod 775 bin/factuality
+	chmod 775 bin/installmisc
+	bin/installmisc
 	chmod 775 bin/configure_modules
 	bin/configure_modules
 

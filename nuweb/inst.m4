@@ -34,6 +34,12 @@ m4_define(m4_nlpprepo, git@@github.com:PaulHuygen/nlpp.git)m4_dnl
 m4_define(m4_anlpproot, m4_asocket/nlpp)m4_dnl
 m4_define(m4_dp_jardir, m4_anlpproot/env/java/jars)m4_dnl
 m4_dnl
+m4_dnl Perl
+m4_define(m4_perlbase, m4_anlpproot/env/perl)m4_dnl
+m4_define(m4_perllib, m4_perlbase/lib/perl5)m4_dnl
+m4_define(m4_moreutils_url, http://search.cpan.org/CPAN/authors/id/R/RK/RKRIMEN/Scalar-MoreUtils-0.02.tar.gz)m4_dnl
+m4_define(m4_moreutils_pack, Scalar-MoreUtils-0.02)m4_dnl
+m4_dnl
 m4_dnl Components
 m4_dnl
 m4_dnl EHU-tok
@@ -77,6 +83,8 @@ m4_dnl FBK-timerel
 m4_define(m4_timerelmodule, FBK-time.v23)m4_dnl
 m4_dnl FBK-causalrel
 m4_define(m4_causalrelmodule, FBK-causalrel.v23)m4_dnl
+m4_dnl VUA-factuality
+m4_define(m4_factualmodule, VUA-factuality)m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl
