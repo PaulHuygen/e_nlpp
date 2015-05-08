@@ -502,6 +502,52 @@ java -Xmx812m -cp $JARFILE $JAVAMODULE  $JAVAOPTIONS
 
 @| @}
 
+\subsection{Timerel}
+\label{sec:timerel}
+
+@o m4_bindir/timerel  @{@%
+#!/bin/bash
+@< load progenvironment @>
+rootDir=m4_amoddir/m4_timerelmodule
+cd $rootDir
+BEGINTIME=`date '+%Y-%m-%dT%H:%M:%S%z'`
+timdir=`mktemp -d -t timerel.XXXXXX`
+FILETXP=$timdir/TimePro.txp
+CHUNKIN=$timdir/TimePro.naf
+FILEOUT=$timdir/TimeProOUT.txp
+TIMEPRONORMIN=$timdir/TimeProNormIN.txp
+@% RANDOM=`bash -c 'echo $RANDOM'`
+@% JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.25.x86_64
+@% #JAVA_HOME=/usr
+YAMCHA=./tools
+@% 
+@% FILETXP=/tmp/$RANDOM-TimePro.txp
+@% CHUNKIN=/tmp/$RANDOM-TimePro.naf
+@% FILEOUT=/tmp/$RANDOM-TimeProOUT.txp
+@% TIMEPRONORMIN=/tmp/$RANDOM-TimeProNormIN.txp
+
+cat $1 > $CHUNKIN
+cat $CHUNKIN | java -cp "lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity timex
+
+#echo "Saving... $FILETXP"
+tail -n +4 $FILETXP | awk -f resources/english-rules > $FILEOUT
+head -n +4 $FILETXP > $TIMEPRONORMIN
+
+cat $FILEOUT | $YAMCHA/yamcha-0.33/usr/local/bin/yamcha -m models/tempeval3_silver-data.model >> $TIMEPRONORMIN
+cat $TIMEPRONORMIN | java -cp "lib/scala-library.jar:lib/timenorm-0.9.0.jar:lib/threetenbp-0.8.1.jar:lib/TimeProNorm_v2.4.jar" eu.fbk.timePro.TimeProNormApply $FILETXP
+
+@% rm $FILEOUT
+@% rm $TIMEPRONORMIN
+
+java -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $CHUNKIN $FILETXP "$BEGINTIME" TIMEX3 
+
+#cat $FILETXP.out
+#rm $FILETXP
+#rm $FILETXP.out
+@% rm $CHUNKIN
+rm -rf $timdir
+
+@| @}
 
 
 
@@ -556,7 +602,8 @@ cd $TESTDIR
 @% cat $TESTDIR/test.wsd.naf | $BIND/ned  > $TESTDIR/test.ned.naf
 @% cat $TESTDIR/test.ned.naf | $BIND/srl  > $TESTDIR/test.srl.naf
 @% cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
-cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
+@% cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
+cat $TESTDIR/test.ecrf.naf | $BIND/timerel  > $TESTDIR/test.trel.naf
 @% cat $TESTDIR/test.onto.naf | $BIND/heideltime > $TESTDIR/test.times.naf
 @% cat $TESTDIR/test.ecrf.naf | $BIND/framesrl  > $TESTDIR/test.fsrl.naf
 
@@ -588,6 +635,7 @@ sources :
 	chmod 775 bin/srl
 	chmod 775 bin/time
 	chmod 775 bin/evcoref
+	chmod 775 bin/timerel
 	chmod 775 bin/configure_modules
 	bin/configure_modules
 
