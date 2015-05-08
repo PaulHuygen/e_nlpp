@@ -70,6 +70,9 @@ m4_dnl m4_define(m4_srlmodule, EHU-srl)m4_dnl
 m4_define(m4_srlmodule, EHU-srl.v21)m4_dnl
 m4_dnl FBK-time
 m4_define(m4_timemodule, FBK-time.v23)m4_dnl
+m4_dnl VUA-eventcoref
+m4_define(m4_eventcorefmodule, vua-eventcoreference_v2)m4_dnl
+m4_define(m4_eventcorefjar, EventCoreference-1.0-SNAPSHOT-jar-with-dependencies.jar)m4_dnl
 m4_dnl
 m4_dnl
 m4_dnl

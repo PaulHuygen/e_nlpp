@@ -488,28 +488,17 @@ Try the instance from the Dutch pipeline.
 @o m4_bindir/evcoref @{@%
 #!/bin/bash
 @< load progenvironment @>
-#### Within document event coreference wordnet sim
-rootDir=/home/newsreader/components/VUA-eventcoref.v21/
-java -Xmx812m -cp "$rootDir/lib/EventCoreference-1.0-SNAPSHOT-jar-with-dependencies.jar" eu.newsreader.eventcoreference.naf.EventCorefWordnetSim --method leacock-chodorow --wn-lmf "$rootDir/resources/wneng-30.lmf.xml.xpos" --sim 2.0 --relations has_hyperonym#event#has_hypernym
-
-#!/bin/bash
-source /home/paul/projecten/cltl/pipelines/nlpp/bin/progenv
-
-MODROOT=$PIPEMODD/vua-eventcoreference_v2
+JARDIR=m4_dp_jardir
+MODROOT=$PIPEMODD/m4_eventcorefmodule
 RESOURCESDIR=$MODROOT/resources
-JARFILE=/home/paul/projecten/cltl/pipelines/nlpp/env/java/jars/EventCoreference-1.0-SNAPSHOT-jar-with-dependencies.jar
-
+JARFILE=$JARDIR/m4_eventcorefjar
 JAVAMODULE=eu.newsreader.eventcoreference.naf.EventCorefWordnetSim
 JAVAOPTIONS="--method leacock-chodorow"
-JAVAOPTIONS="$JAVAOPTIONS  --wn-lmf $RESOURCESDIR/cornetto2.1.lmf.xml"
+JAVAOPTIONS="$JAVAOPTIONS  --wn-lmf $RESOURCESDIR/wneng-30.lmf.xml.xpos" 
 JAVAOPTIONS="$JAVAOPTIONS  --sim 2.0"
-JAVAOPTIONS="$JAVAOPTIONS  --relations XPOS_NEAR_SYNONYM#HAS_HYPERONYM#HAS_XPOS_HYPERONYM"
-
-
+@% JAVAOPTIONS="$JAVAOPTIONS  --relations XPOS_NEAR_SYNONYM#HAS_HYPERONYM#HAS_XPOS_HYPERONYM"
+JAVAOPTIONS="$JAVAOPTIONS  --relations has_hyperonym#event#has_hypernym"
 java -Xmx812m -cp $JARFILE $JAVAMODULE  $JAVAOPTIONS
-
-
-
 
 @| @}
 
@@ -566,9 +555,9 @@ cd $TESTDIR
 @% cat test.ukb.naf | $BIND/ims-wsd > $TESTDIR/test.wsd.naf
 @% cat $TESTDIR/test.wsd.naf | $BIND/ned  > $TESTDIR/test.ned.naf
 @% cat $TESTDIR/test.ned.naf | $BIND/srl  > $TESTDIR/test.srl.naf
-cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
+@% cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
+cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
 @% cat $TESTDIR/test.onto.naf | $BIND/heideltime > $TESTDIR/test.times.naf
-@% cat $TESTDIR/test.srl.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
 @% cat $TESTDIR/test.ecrf.naf | $BIND/framesrl  > $TESTDIR/test.fsrl.naf
 
 
@@ -598,6 +587,7 @@ sources :
 	chmod 775 bin/ned
 	chmod 775 bin/srl
 	chmod 775 bin/time
+	chmod 775 bin/evcoref
 	chmod 775 bin/configure_modules
 	bin/configure_modules
 
