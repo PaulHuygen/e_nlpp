@@ -392,11 +392,45 @@ python $rootDir/call_ims.py -ili30
 \subsection{Ned}
 \label{sec:ned}
 
+It seems that we can use the \NED{} module of the dutch pipeline, so
+let us do that.
+
+The \NED{} module needs to connect to a DBPedia server that needs 8GB
+of memory. That means that when the dutch ane the engloish pipeline
+run at the same time, 16GB of memory is occupied by the DBpedia
+servers.
+
+Anyway, before we run the \NED{} module, we chack whether the DBPedia
+server is available and install it if this is not the case.
+
+
+
+@d start the Spotlight server @{@%
+cd m4_aspotlightdir
+@% java  -Xmx8g -jar m4_spotlightjar nl http://localhost:m4_spotlight_nl_port/rest
+java -jar -Xmx8g dbpedia-spotlight-0.7-jar-with-dependencies-candidates.jar en_2+2 http://localhost:<!!>m4_spotlight_en_port<!!>/rest  &
+@% java -jar -Xmx8g dbpedia-spotlight-0.7-jar-with-dependencies-candidates.jar nl http://localhost:2060/rest  &
+@| @}
+
+
+@d check/start the Spotlight server @{@%
+spottasks=`netstat -an | grep :m4_spotlight_en_port | wc -l`
+if
+  [ $spottasks -eq 0 ]
+then
+  @< start the Spotlight server @>
+  sleep 120
+fi
+@| @}
+
+
+
 @o m4_bindir/ned @{@%
 #!/bin/bash
 @< load progenvironment @>
+@< check/start the Spotlight server @>
 rootDir=m4_amoddir/m4_nedmodule
-java -jar ${rootDir}/ixa-pipe-ned-1.1.1.jar -p 2020 -e candidates
+java -Xmx1000m -jar m4_dp_jardir/m4_nedjar -p m4_spotlight_en_port -e candidates
 
 @| @}
 
@@ -404,25 +438,25 @@ java -jar ${rootDir}/ixa-pipe-ned-1.1.1.jar -p 2020 -e candidates
 \subsection{srl}
 \label{sec:srl}
 
-Currently, module \verb|m4_srlmodule| results in a null-pointer
-exception when applied to the testfile from the \textsc{ned} module:
-
-\begin{verbatim}
-java.lang.NullPointerException
-	at is2.parser.Decoder.decode(Decoder.java:82)
-	at is2.parser.Parser.parse(Parser.java:478)
-	at is2.parser.Parser.apply(Parser.java:503)
-	at se.lth.cs.srl.preprocessor.Preprocessor.preprocess(Preprocessor.java:94)
-	at ixa.srl.MatePipeline.parse(MatePipeline.java:128)
-	at ixa.srl.MatePipeline.parseCoNLL09(MatePipeline.java:268)
-	at ixa.srl.MatePipeline.Pipeline(MatePipeline.java:233)
-	at ixa.srl.Annotate.annotate(Annotate.java:208)
-	at ixa.srl.Annotate.SRLToKAF(Annotate.java:72)
-	at ixa.srl.SRL.main(SRL.java:43)
-
-\end{verbatim}
-
-However, the module still produces a valid \NAF{} file.
+@% Currently, module \verb|m4_srlmodule| results in a null-pointer
+@% exception when applied to the testfile from the \textsc{ned} module:
+@% 
+@% \begin{verbatim}
+@% java.lang.NullPointerException
+@% 	at is2.parser.Decoder.decode(Decoder.java:82)
+@% 	at is2.parser.Parser.parse(Parser.java:478)
+@% 	at is2.parser.Parser.apply(Parser.java:503)
+@% 	at se.lth.cs.srl.preprocessor.Preprocessor.preprocess(Preprocessor.java:94)
+@% 	at ixa.srl.MatePipeline.parse(MatePipeline.java:128)
+@% 	at ixa.srl.MatePipeline.parseCoNLL09(MatePipeline.java:268)
+@% 	at ixa.srl.MatePipeline.Pipeline(MatePipeline.java:233)
+@% 	at ixa.srl.Annotate.annotate(Annotate.java:208)
+@% 	at ixa.srl.Annotate.SRLToKAF(Annotate.java:72)
+@% 	at ixa.srl.SRL.main(SRL.java:43)
+@% 
+@% \end{verbatim}
+@% 
+@% However, the module still produces a valid \NAF{} file.
 
 Note that the \testsc{srl} module seems to require 2,5G of
 memory. Take this into account when you want to apply
@@ -712,20 +746,20 @@ TESTDIR=$ROOT/test
 BIND=$ROOT/bin
 mkdir -p $TESTDIR
 cd $TESTDIR
-@% cat $ROOT/nuweb/m4_atestfile | $BIND/tok > $TESTDIR/test.tok.naf
-@% cat test.tok.naf | $BIND/pos > $TESTDIR/test.pos.naf
-@% cat test.pos.naf | $BIND/nerc > $TESTDIR/test.nerc.naf
-@% cat $TESTDIR/test.nerc.naf | $BIND/constparse > $TESTDIR/test.const.naf
-@% cat $TESTDIR/test.const.naf | $BIND/corefgraph > $TESTDIR/test.corefg.naf
-@% cat $TESTDIR/test.corefg.naf | $BIND/opinion > $TESTDIR/test.opin.naf
-@% cat $TESTDIR/test.opin.naf | $BIND/ukb > $TESTDIR/test.ukb.naf
-@% cat test.ukb.naf | $BIND/ims-wsd > $TESTDIR/test.wsd.naf
-@% cat $TESTDIR/test.wsd.naf | $BIND/ned  > $TESTDIR/test.ned.naf
-@% cat $TESTDIR/test.ned.naf | $BIND/srl  > $TESTDIR/test.srl.naf
-@% cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
-@% cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
-@% cat $TESTDIR/test.ecrf.naf | $BIND/timerel  > $TESTDIR/test.trel.naf
-@% cat $TESTDIR/test.trel.naf | $BIND/causalrel  > $TESTDIR/test.crel.naf
+cat $ROOT/nuweb/m4_atestfile | $BIND/tok > $TESTDIR/test.tok.naf
+cat test.tok.naf | $BIND/pos > $TESTDIR/test.pos.naf
+cat test.pos.naf | $BIND/nerc > $TESTDIR/test.nerc.naf
+cat $TESTDIR/test.nerc.naf | $BIND/constparse > $TESTDIR/test.const.naf
+cat $TESTDIR/test.const.naf | $BIND/corefgraph > $TESTDIR/test.corefg.naf
+cat $TESTDIR/test.corefg.naf | $BIND/opinion > $TESTDIR/test.opin.naf
+cat $TESTDIR/test.opin.naf | $BIND/ukb > $TESTDIR/test.ukb.naf
+cat test.ukb.naf | $BIND/ims-wsd > $TESTDIR/test.wsd.naf
+cat $TESTDIR/test.wsd.naf | $BIND/ned  > $TESTDIR/test.ned.naf
+cat $TESTDIR/test.ned.naf | $BIND/srl  > $TESTDIR/test.srl.naf
+cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
+cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
+cat $TESTDIR/test.ecrf.naf | $BIND/timerel  > $TESTDIR/test.trel.naf
+cat $TESTDIR/test.trel.naf | $BIND/causalrel  > $TESTDIR/test.crel.naf
 cat $TESTDIR/test.crel.naf | $BIND/factuality  > $TESTDIR/test.out.naf
 
 
