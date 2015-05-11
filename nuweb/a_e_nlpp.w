@@ -64,10 +64,10 @@ the pipeline actually works.
 The following Makefile performs everything.
 
 @o ../Makefile -t @{@%
-@% @< variables of Makefile @>
+@< variables of Makefile @>
 
 configure_modules:
-	@< configure modules @>
+	configure modules
 
 @< rules of Makefile @>
 
@@ -89,7 +89,7 @@ nlpproot = "m4_asocket/nlpp"
 projroot = "m4_aprojroot"
 comproot = "m4_amoddir"
 
-@< methods in configure_modules @>
+@< methods in configure\_modules @>
 
 @| @}
 
@@ -158,7 +158,7 @@ java -jar ${rootDir}/ixa-pipe-pos-1.2.0.jar tag
 \label{sec:nerc}
 
 Use the \NERC{} module from the dutch pipeline, because it is more
-recent. However, the resource4s needed form the Englisfh version
+recent. However, the resource4s needed form the English version
 contain absolute, hence obsolete, paths. Change these paths.
 
 @d variables of Makefile @{@%
@@ -458,7 +458,7 @@ java -Xmx1000m -jar m4_dp_jardir/m4_nedjar -p m4_spotlight_en_port -e candidates
 @% 
 @% However, the module still produces a valid \NAF{} file.
 
-Note that the \testsc{srl} module seems to require 2,5G of
+Note that the \textsc{srl} module seems to require 2,5G of
 memory. Take this into account when you want to apply
 parallellisation.
 
@@ -540,52 +540,99 @@ java -Xmx812m -cp $JARFILE $JAVAMODULE  $JAVAOPTIONS
 
 @| @}
 
-\subsection{Timerel}
-\label{sec:timerel}
+\subsection{Temprel}
+\label{sec:temprel}
 
-@o m4_bindir/timerel  @{@%
+The FBK temprel module still has absolute pathds that must be
+avoided. It uses subdirectory \verb|tmp| of the module directory to
+store tempfiles, which makes impossible to run two instances of the
+module at the same time.
+
+Therefore the run script must be modified:
+
+\begin{enumerate}
+\item Create a real tempdir for this instance only.
+\item Change path references so that the module can be run without the
+  module-directory being the default directory. When needed, copy
+  resources to the temp directory.
+\item \texttt{cd} to this tempdir.
+\item Run the thing.
+\item cd back
+\item rempve the temp directory.
+\end{enumerate}
+
+
+@o m4_bindir/temprel  @{@%
 #!/bin/bash
 @< load progenvironment @>
-rootDir=m4_amoddir/m4_timerelmodule
-cd $rootDir
+rootDir=m4_amoddir/m4_temprelmodule
+timdir=`mktemp -d -t time.XXXXXX`
+yamchabin=$rootDir/tools/yamcha-0.33/usr/local/bin/yamcha
+cd $timdir
+@| @}
+
+Copy files that programs expect on the default directory to the temp
+directory.
+
+@o m4_bindir/temprel  @{@%
+cp $rootDir/*.list $timdir/
+@| @}
+
+
+@o m4_bindir/temprel  @{@%
 BEGINTIME=`date '+%Y-%m-%dT%H:%M:%S%z'`
-timdir=`mktemp -d -t timerel.XXXXXX`
-FILETXP=$timdir/TimePro.txp
-CHUNKIN=$timdir/TimePro.naf
-FILEOUT=$timdir/TimeProOUT.txp
-TIMEPRONORMIN=$timdir/TimeProNormIN.txp
-@% RANDOM=`bash -c 'echo $RANDOM'`
-@% JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.25.x86_64
-@% #JAVA_HOME=/usr
-YAMCHA=./tools
-@% 
-@% FILETXP=/tmp/$RANDOM-TimePro.txp
-@% CHUNKIN=/tmp/$RANDOM-TimePro.naf
-@% FILEOUT=/tmp/$RANDOM-TimeProOUT.txp
-@% TIMEPRONORMIN=/tmp/$RANDOM-TimeProNormIN.txp
+FILETXP=$timdir/Temprel
+NAF=$timdir/Temprel.naf
+cat > $NAF
+cat $NAF | java -cp "$rootDir/lib/kaflib-naf-1.0.2.jar:$rootDir/lib/NAFtoTXP_v10.jar:$rootDir/lib/jdom-2.0.5.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity+event+timex+connectives+srl+dep+morpho+dct+main_verb+pairs eval
+@| @}
 
-cat > $CHUNKIN
-cat $CHUNKIN | java -cp "lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity timex
 
-#echo "Saving... $FILETXP"
-tail -n +4 $FILETXP | awk -f resources/english-rules > $FILEOUT
-head -n +4 $FILETXP > $TIMEPRONORMIN
+The following part is adapted from \texttt{temprel-pipeline-per-file-NWR_v2.sh}
 
-cat $FILEOUT | $YAMCHA/yamcha-0.33/usr/local/bin/yamcha -m models/tempeval3_silver-data.model >> $TIMEPRONORMIN
-cat $TIMEPRONORMIN | java -cp "lib/scala-library.jar:lib/timenorm-0.9.0.jar:lib/threetenbp-0.8.1.jar:lib/TimeProNorm_v2.4.jar" eu.fbk.timePro.TimeProNormApply $FILETXP
+@o m4_bindir/temprel  @{@%
+if [ ! -d "$timdir/tmp/" ]; then
+    mkdir $timdir/tmp/
+fi
+python $rootDir/buildTempRelPairFeatures.py $FILETXP ee -type bin > tmp/ee.tlinks
+$yamchabin -m $rootDir/models/NAF_TXP_bin-event-event.model < tmp/ee.tlinks > tmp/NAF_TXP_bin_ee.tagged
 
-@% rm $FILEOUT
-@% rm $TIMEPRONORMIN
+python $rootDir/buildTempRelPairFeatures.py $FILETXP et -type bin -et dct-main    #output: et-dct-main-rel.tlinks, et-dct-non-dct-none.tlinks
+$yamchabin -m $rootDir/models/NAF_TXP_bin-event-timex.model < tmp/et-dct-non-dct-none.tlinks > tmp/NAF_TXP_bin_et-dct-non-dct-none.tagged
+cat tmp/et-dct-main-rel.tlinks tmp/NAF_TXP_bin_et-dct-non-dct-none.tagged >> tmp/NAF_TXP_bin_et.tagged
 
-java -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $CHUNKIN $FILETXP "$BEGINTIME" TIMEX3 
+rm tmp/ee.tlinks
+rm tmp/et-dct-main-rel.tlinks
+rm tmp/et-dct-non-dct-none.tlinks
+rm tmp/NAF_TXP_bin_et-dct-non-dct-none.tagged
 
-#cat $FILETXP.out
-#rm $FILETXP
-#rm $FILETXP.out
-@% rm $CHUNKIN
-rm -rf $timdir
+awk -F"\t" '$33=="REL" || NF==0 { print; }' tmp/NAF_TXP_bin_ee.tagged | cut -f-31,33 > tmp/NAF_TXP_rel_ee.tlinks
+awk -F"\t" '$32=="REL" || NF==0 { print; }' tmp/NAF_TXP_bin_et.tagged | cut -f-30,32  > tmp/NAF_TXP_rel_et.tlinks
+
+$yamchabin -m ./models/NAF_TXP_rel-event-event.model < $timdir/NAF_TXP_rel_ee.tlinks > $timdir/NAF_TXP_rel_ee.tagged
+$yamchabin -m ./models/NAF_TXP_rel-event-timex.model < $timdir/NAF_TXP_rel_et.tlinks > $timdir/NAF_TXP_rel_et.tagged
+
+rm tmp/NAF_TXP_rel_ee.tlinks tmp/NAF_TXP_rel_et.tlinks
+rm tmp/NAF_TXP_bin_ee.tagged tmp/NAF_TXP_bin_et.tagged
+
+
+cut -f1,2,33 tmp/NAF_TXP_rel_ee.tagged > tmp/ee.tlinks
+cut -f1,2,32 tmp/NAF_TXP_rel_et.tagged > tmp/et.tlinks
+cat tmp/ee.tlinks tmp/et.tlinks | grep . > $FILETXP.tlinks
+
+python $rootDir/buildTempRelPairFeatures_v2.py $FILETXP tt | cat >>$FILETXP.tlinks
+
+rm tmp/NAF_TXP_rel_ee.tagged tmp/NAF_TXP_rel_et.tagged
+rm tmp/ee.tlinks tmp/et.tlinks
 
 @| @}
+
+
+@o m4_bindir/temprel  @{@%
+java -Dfile.encoding=UTF8 -cp "$rootDir/lib/TXPtoNAF_v3.jar:$rootDir/lib/jdom-2.0.5.jar:$rootDir/lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $NAF $FILETXP.tlinks "$BEGINTIME" TLINK
+@% rm -rf $timdir
+@| @}
+
 
 \subsection{Causalrel}
 \label{sec:causalrel}
@@ -715,7 +762,7 @@ rm -fr ${TMPDIR} >& /dev/null
 The following Python method replaces copies of an obsolete string
 \verb|obs| by a replacement string \verb|repl| in a given file. 
 
-@d methods in configure_modules @{@%
+@d methods in configure\_modules @{@%
 def repl_strings_in_file( filepath, obs, repl):
     fin = open(filepath, 'r')
     sin = fin.read()
@@ -758,7 +805,7 @@ cat $TESTDIR/test.wsd.naf | $BIND/ned  > $TESTDIR/test.ned.naf
 cat $TESTDIR/test.ned.naf | $BIND/srl  > $TESTDIR/test.srl.naf
 cat $TESTDIR/test.srl.naf | $BIND/time > $TESTDIR/test.time.naf
 cat $TESTDIR/test.time.naf | $BIND/evcoref  > $TESTDIR/test.ecrf.naf
-cat $TESTDIR/test.ecrf.naf | $BIND/timerel  > $TESTDIR/test.trel.naf
+cat $TESTDIR/test.ecrf.naf | $BIND/temprel  > $TESTDIR/test.trel.naf
 cat $TESTDIR/test.trel.naf | $BIND/causalrel  > $TESTDIR/test.crel.naf
 cat $TESTDIR/test.crel.naf | $BIND/factuality  > $TESTDIR/test.out.naf
 
@@ -791,6 +838,7 @@ sources :
 	chmod 775 bin/time
 	chmod 775 bin/evcoref
 	chmod 775 bin/timerel
+	chmod 775 bin/temprel
 	chmod 775 bin/causalrel
 	chmod 775 bin/factuality
 	chmod 775 bin/installmisc
@@ -800,3 +848,4 @@ sources :
 
 @| @}
 
+\end{document}
