@@ -576,6 +576,8 @@ directory.
 
 @o m4_bindir/temprel  @{@%
 cp $rootDir/*.list $timdir/
+cp -r $rootDir/resources $timdir/
+
 @| @}
 
 
@@ -609,8 +611,8 @@ rm tmp/NAF_TXP_bin_et-dct-non-dct-none.tagged
 awk -F"\t" '$33=="REL" || NF==0 { print; }' tmp/NAF_TXP_bin_ee.tagged | cut -f-31,33 > tmp/NAF_TXP_rel_ee.tlinks
 awk -F"\t" '$32=="REL" || NF==0 { print; }' tmp/NAF_TXP_bin_et.tagged | cut -f-30,32  > tmp/NAF_TXP_rel_et.tlinks
 
-$yamchabin -m ./models/NAF_TXP_rel-event-event.model < $timdir/NAF_TXP_rel_ee.tlinks > $timdir/NAF_TXP_rel_ee.tagged
-$yamchabin -m ./models/NAF_TXP_rel-event-timex.model < $timdir/NAF_TXP_rel_et.tlinks > $timdir/NAF_TXP_rel_et.tagged
+$yamchabin -m $rootDir/models/NAF_TXP_rel-event-event.model < tmp/NAF_TXP_rel_ee.tlinks > tmp/NAF_TXP_rel_ee.tagged
+$yamchabin -m $rootDir/models/NAF_TXP_rel-event-timex.model < tmp/NAF_TXP_rel_et.tlinks > tmp/NAF_TXP_rel_et.tagged
 
 rm tmp/NAF_TXP_rel_ee.tlinks tmp/NAF_TXP_rel_et.tlinks
 rm tmp/NAF_TXP_bin_ee.tagged tmp/NAF_TXP_bin_et.tagged
@@ -651,7 +653,7 @@ in the main script that runs the module.
 rootDir=m4_amoddir/m4_causalrelmodule
 cd $rootDir
 BEGINTIME=`date '+%Y-%m-%dT%H:%M:%S%z'`
-timdir=`mktemp -d -t timerel.XXXXXX`
+timdir=`mktemp -d -t causalrel.XXXXXX`
 FILETXP=$timdir/Causalrel
 @% FILETXPcsignalcol=$timdir/Causalrel.csignal.col
 @% FILETXPcsignals=$timdir/Causalrel.csignals
