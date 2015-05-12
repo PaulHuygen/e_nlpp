@@ -25,7 +25,7 @@ m4_define(m4_nwrrepoport, 2223)m4_dnl
 m4_define(m4_nwruser, newsreader)m4_dnl
 m4_define(m4_anlpproot, m4_asocket/nlpp)m4_dnl
 m4_define(m4_aprogenvscript, m4_anlpproot/bin/progenv)m4_dnl
-m4_define(m4_atestfile, test.in.naf)m4_dnl
+m4_define(m4_atestfile, testin.naf)m4_dnl
 m4_dnl
 m4_dnl Paths and URL's of Dutch pipeline
 m4_dnl
@@ -71,11 +71,13 @@ m4_define(m4_cparserversion, 1.0.2)m4_dnl
 m4_dnl EHU-corefgraph
 m4_define(m4_corefgraphmodule, EHU-corefgraph.v21)m4_dnl
 m4_define(m4_cparserversion, 1.0.2)m4_dnl
+m4_define(m4_pynaf_giturl, https://github.com/ixa-ehu/pynaf.git)m4_dnl
 m4_dnl VUA-opinionminer
 m4_define(m4_opiminemodule, VUA-opinion-miner)m4_dnl
 m4_define(m4_opimineconffilepath, m4_opiminemodule/final_models/en/mpqa/config.cfg)m4_dnl
 m4_define(m4_cparserjar, ixa-pipe-parse)m4_dnl
 m4_define(m4_cparserversion, 1.0.2)m4_dnl
+m4_define(m4_pylib_githuburl, https://github.com/cltl/VUA_pylib.git)m4_dnl
 m4_dnl VUA-ims-wsd
 m4_define(m4_wsdmodule, VUA-ims-wsd)m4_dnl
 m4_define(m4_bad_wsd_pythonscript, path_to_ims.py)m4_dnl

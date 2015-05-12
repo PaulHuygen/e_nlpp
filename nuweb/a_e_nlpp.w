@@ -79,6 +79,7 @@ nlpproot = m4_asocket/nlpp
 @| @}
 
 
+
 @o m4_bindir/configure_modules @{@%
 #!/usr/bin/env python
 import string
@@ -96,6 +97,7 @@ comproot = "m4_amoddir"
 
 @o m4_bindir/installmisc @{@%
 #!/bin/bash
+@< load progenvironment @>
 @| @}
 
 
@@ -235,9 +237,16 @@ The corefgraph module \verb|EHU-corefgraph| is a Python
 module. According to the doc (\verb|EHU-INSTALL|) it needs python
 modules \verb|networkx| and \verb|pyyaml| that have already been
 installed in \verb|nlpp|. Furthermore, it needs the \verb|pynaf|
-module from \EHU{}. For now, we consider it done. According to Ridrigo
-Agerri the final varsion of pynaf needs to be combined with corefgraph
+module from \EHU{}. 
+For now, we consider it done. According to Rodrigo
+Agerri the final version of pynaf needs to be combined with corefgraph
 version 2.1. 
+
+@o m4_bindir/installmisc @{@%
+pip install --upgrade git+<!!>m4_pynaf_giturl
+@| @}
+
+
 
 Script to run the \verb|EHU-parse| module:
 
@@ -277,6 +286,14 @@ repl_strings_in_file(opinionconfigfile, obspart, replpart)
 @%     fout.close()
 
 @| @}
+
+Furthermore, the opinion-miner needs \verb|VUA-pylib|. So, we need to install that.
+
+@o m4_bindir/installmisc @{@%
+cd $PIPEROOT/env/python
+git clone m4_pylib_githuburl
+@| @}
+
 
 
 @o m4_bindir/opinion  @{@%
@@ -839,7 +856,6 @@ sources :
 	chmod 775 bin/srl
 	chmod 775 bin/time
 	chmod 775 bin/evcoref
-	chmod 775 bin/timerel
 	chmod 775 bin/temprel
 	chmod 775 bin/causalrel
 	chmod 775 bin/factuality
