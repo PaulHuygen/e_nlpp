@@ -55,6 +55,11 @@ m4_define(m4_spotlight_nl_model, nl.tar.gz)m4_dnl
 m4_define(m4_spotlight_en_model, en_2+2.tar.gz)m4_dnl
 m4_define(m4_spotlight_en_port, 2020)m4_dnl
 m4_dnl
+m4_dnl Boost
+m4_dnl
+m4_define(m4_boostball, boost_1_54_0.tar.bz2)m4_dnl
+m4_define(m4_boosturl, http://downloads.sourceforge.net/project/boost/boost/1.54.0/`'m4_boostball)m4_dnl
+m4_dnl
 m4_dnl Components
 m4_dnl
 m4_dnl EHU-tok

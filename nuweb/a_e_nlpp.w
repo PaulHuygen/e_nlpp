@@ -309,7 +309,25 @@ python $root/classify_kaf_naf_file.py -m $root/final_models/en/mpqa/
 \subsection{UKB}
 \label{sec:UKB}
 
-UKB needs boost libraries and Perl version 5. For now, we consider them installed.
+UKB needs boost libraries and Perl version 5. We need to install boost ourselves, at least for Lisa.
+
+@o m4_bindir/installmisc @{@%
+dp_env=m4_dp_envdir/usrlocal
+boostdir=`mktemp -d -t boost.XXXXXX`
+cd $boostdir
+wget m4_boosturl
+tar xjf boost_1_54_0.tar.bz2
+cd boost_1_54_0
+./bootstrap.sh --prefix=$dp_env --libdir=$dp_env/lib --with-libraries=graph,system,filesystem,program_options,regex
+./b2
+./b2 install 
+cd m4_aprojroot
+rm -fr $boostdir
+
+@| @}
+
+
+For now, we consider them installed.
 
 @% For \textsc{ukb} we need to install boost.
 @% 
@@ -332,8 +350,9 @@ UKB needs boost libraries and Perl version 5. For now, we consider them installe
 @o m4_bindir/ukb @{@%
 #!/bin/bash
 @< load progenvironment @>
-export PERL5LIB=$PERL5LIB:/home/newsreader/opt/lib/perl5
-rootDir=m4_moddir/EHU-ukb
+export PERL5LIB=$PERL5LIB:m4_perllib
+export LD_LIBRARY_PATH=m4_dp_envdir/usrlocal/lib:$LD_LIBRARY_PATH
+rootDir=m4_amoddir/EHU-ukb
 ${rootDir}/naf_ukb/naf_ukb.pl -x ${rootDir}/ukb/bin/ukb_wsd -K ${rootDir}/wn30-ili_lkb/wn30g.bin64 -D ${rootDir}/wn30-ili_lkb/wn30.lex - -- --dict_weight --dgraph_dfs --dgraph_rank ppr
 
 @| @}
@@ -436,7 +455,7 @@ if
   [ $spottasks -eq 0 ]
 then
   @< start the Spotlight server @>
-  sleep 120
+  sleep 60
 fi
 @| @}
 
