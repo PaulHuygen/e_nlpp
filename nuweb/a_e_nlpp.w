@@ -150,7 +150,7 @@ Script to run the pos-tagger:
 #!/bin/bash
 @< load progenvironment @>
 rootDir=m4_amoddir/EHU-pos
-java -jar ${rootDir}/ixa-pipe-pos-1.2.0.jar tag
+java -Xmx1000m -jar ${rootDir}/ixa-pipe-pos-1.2.0.jar tag
 
 @| @}
 
@@ -530,19 +530,19 @@ TIMEPRONORMIN=$timdir/TimeProNormIN.txp
 cd $rootDir
 @% cat $1 > $CHUNKIN
 cat > $CHUNKIN
-cat $CHUNKIN | java -cp "lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity timex
+cat $CHUNKIN | java -Xmx1000m -cp "lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity timex
 
 #echo "Saving... $FILETXP"
 tail -n +4 $FILETXP | awk -f resources/english-rules > $FILEOUT
 head -n +4 $FILETXP > $TIMEPRONORMIN
 
 cat $FILEOUT | $YAMCHA/yamcha-0.33/usr/local/bin/yamcha -m models/tempeval3_silver-data.model >> $TIMEPRONORMIN
-cat $TIMEPRONORMIN | $JAVA_HOME/bin/java -cp "lib/scala-library.jar:lib/timenorm-0.9.0.jar:lib/threetenbp-0.8.1.jar:lib/TimeProNorm_v2.4.jar" eu.fbk.timePro.TimeProNormApply $FILETXP
+cat $TIMEPRONORMIN | $JAVA_HOME/bin/java -Xmx1000m -cp "lib/scala-library.jar:lib/timenorm-0.9.0.jar:lib/threetenbp-0.8.1.jar:lib/TimeProNorm_v2.4.jar" eu.fbk.timePro.TimeProNormApply $FILETXP
 
 @% rm $FILEOUT
 @% rm $TIMEPRONORMIN
 
-java -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $CHUNKIN $FILETXP "$BEGINTIME" TIMEX3 
+java -Xmx1000m -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $CHUNKIN $FILETXP "$BEGINTIME" TIMEX3 
 
 
 
@@ -622,7 +622,7 @@ BEGINTIME=`date '+%Y-%m-%dT%H:%M:%S%z'`
 FILETXP=$timdir/Temprel
 NAF=$timdir/Temprel.naf
 cat > $NAF
-cat $NAF | java -cp "$rootDir/lib/kaflib-naf-1.0.2.jar:$rootDir/lib/NAFtoTXP_v10.jar:$rootDir/lib/jdom-2.0.5.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity+event+timex+connectives+srl+dep+morpho+dct+main_verb+pairs eval
+cat $NAF | java -Xmx1000m -cp "$rootDir/lib/kaflib-naf-1.0.2.jar:$rootDir/lib/NAFtoTXP_v10.jar:$rootDir/lib/jdom-2.0.5.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity+event+timex+connectives+srl+dep+morpho+dct+main_verb+pairs eval
 @| @}
 
 
@@ -667,7 +667,7 @@ rm tmp/ee.tlinks tmp/et.tlinks
 
 
 @o m4_bindir/temprel  @{@%
-java -Dfile.encoding=UTF8 -cp "$rootDir/lib/TXPtoNAF_v3.jar:$rootDir/lib/jdom-2.0.5.jar:$rootDir/lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $NAF $FILETXP.tlinks "$BEGINTIME" TLINK
+java -Xmx1000m -Dfile.encoding=UTF8 -cp "$rootDir/lib/TXPtoNAF_v3.jar:$rootDir/lib/jdom-2.0.5.jar:$rootDir/lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $NAF $FILETXP.tlinks "$BEGINTIME" TLINK
 @% rm -rf $timdir
 @| @}
 
@@ -697,13 +697,13 @@ NAF=$timdir/Causalrel.naf
 
 cat > $NAF
 
-cat $NAF | java -cp "lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar:lib/jdom-2.0.5.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity+event+timex+connectives+srl+dep+morpho+dct+main_verb+tlink train
+cat $NAF | java -Xmx1000m -cp "lib/kaflib-naf-1.0.2.jar:lib/NAFtoTXP_v10.jar:lib/jdom-2.0.5.jar" eu.fbk.newsreader.naf.NAFtoTXP_v10 $FILETXP chunk+entity+event+timex+connectives+srl+dep+morpho+dct+main_verb+tlink train
 
 @% sh causalrel-pipeline-per-file.sh $FILETXP ./tools/
 @< include causalrel-pipeline-per-file @>
 
 #java -jar TXPtoNAF.jar $NAF $FILETXP.clinks $BEGINTIME CLINK
-java -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $NAF $FILETXP.clinks "$BEGINTIME" CLINK
+java -Xmx1000m -Dfile.encoding=UTF8 -cp "lib/TXPtoNAF_v3.jar:lib/jdom-2.0.5.jar:lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $NAF $FILETXP.clinks "$BEGINTIME" CLINK
 
 
 @% rm $FILETXP
