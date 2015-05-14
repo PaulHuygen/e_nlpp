@@ -19,7 +19,7 @@ m4_define(m4_atestdir, m4_aprojroot`/test')m4_dnl     Binaries
 m4_define(m4_testdir, m4_projroot`/test')m4_dnl     Binaries
 m4_define(m4_amoddir, m4_aprojroot`/components')m4_dnl     Modules
 m4_define(m4_moddir, m4_projroot`/components')m4_dnl     Modules
-m4_define(m4_nrkey, nrkey)m4_dnl
+m4_define(m4_nrkey, m4_asocket/nrkey)m4_dnl
 m4_define(m4_nwrrepo, u017940.si.ehu.es)m4_dnl
 m4_define(m4_nwrrepoport, 2223)m4_dnl
 m4_define(m4_nwruser, newsreader)m4_dnl

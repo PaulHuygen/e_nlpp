@@ -75,7 +75,9 @@ configure_modules:
 
 
 @d variables of Makefile @{@%
-nlpproot = m4_asocket/nlpp
+nlpproot = m4_anlpproot
+nuweb = m4_anlpproot/nuweb/nuweb
+stripnw = m4_anlpproot/nuweb/stripnw
 @| @}
 
 
@@ -120,7 +122,7 @@ export modulesdir=m4_amoddir
 
 @d rules of Makefile @{@%
 updatemods:
-	rsync -azr -e "ssh -i m4_nrkey -p m4_nwrrepoport" m4_nwruser`'@@`'m4_nwrrepo`':components .
+	rsync -azr -e "ssh -i m4_nrkey -p m4_nwrrepoport" m4_nwruser<!!>@@<!!>m4_nwrrepo<!!>:components .
 @| @}
 
 
@@ -309,7 +311,7 @@ python $root/classify_kaf_naf_file.py -m $root/final_models/en/mpqa/
 \subsection{UKB}
 \label{sec:UKB}
 
-UKB needs boost libraries and Perl version 5. We need to install boost ourselves, at least for Lisa.
+UKB needs boost libraries, libxml and Perl version 5. We need to install boost ourselves, at least for Lisa.
 
 @o m4_bindir/installmisc @{@%
 dp_env=m4_dp_envdir/usrlocal
@@ -318,7 +320,7 @@ cd $boostdir
 wget m4_boosturl
 tar xjf boost_1_54_0.tar.bz2
 cd boost_1_54_0
-./bootstrap.sh --prefix=$dp_env --libdir=$dp_env/lib --with-libraries=graph,system,filesystem,program_options,regex
+./bootstrap.sh --prefix=$dp_env --libdir=$dp_env/lib   --with-libraries=graph,system,filesystem,program_options,regex
 ./b2
 ./b2 install 
 cd m4_aprojroot
@@ -668,7 +670,7 @@ rm tmp/ee.tlinks tmp/et.tlinks
 
 @o m4_bindir/temprel  @{@%
 java -Xmx1000m -Dfile.encoding=UTF8 -cp "$rootDir/lib/TXPtoNAF_v3.jar:$rootDir/lib/jdom-2.0.5.jar:$rootDir/lib/kaflib-naf-1.0.2.jar" eu.fbk.newsreader.naf.TXPtoNAF_v3 $NAF $FILETXP.tlinks "$BEGINTIME" TLINK
-@% rm -rf $timdir
+rm -rf $timdir
 @| @}
 
 
@@ -860,8 +862,8 @@ cat $TESTDIR/test.crel.naf | $BIND/factuality  > $TESTDIR/test.out.naf
 sources :
 	mkdir -p m4_abindir
 	mkdir -p m4_atestdir
-	cd nuweb && stripnw m4_progname
-	cd nuweb && nuweb m4_progname.w
+	cd nuweb && $(stripnw) m4_progname
+	cd nuweb && $(nuweb) m4_progname.w
 	chmod 775 bin/test
 	chmod 775 bin/tok
 	chmod 775 bin/pos
